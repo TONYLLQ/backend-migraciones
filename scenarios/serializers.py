@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from catalog.models import QualityRule, ScenarioStatus
+from catalog.models import QualityRule, ScenarioStatus, ScenarioProcess
 from .models import (
     OperationalActionStatus,
     Scenario,
@@ -35,9 +35,16 @@ class ScenarioOperationalActionSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at", "rule_name", "responsible_email", "status_code", "status_name"]
 
 class ScenarioSerializer(serializers.ModelSerializer):
-    process_code = serializers.CharField(source="process.code", read_only=True)
+    process = serializers.SlugRelatedField(
+        slug_field="code",
+        queryset=ScenarioProcess.objects.all()
+    )
     process_name = serializers.CharField(source="process.name", read_only=True)
-    status_code = serializers.CharField(source="status.code", read_only=True)
+    
+    status = serializers.SlugRelatedField(
+        slug_field="code",
+        read_only=True
+    )
     status_name = serializers.CharField(source="status.name", read_only=True)
 
     rules = serializers.PrimaryKeyRelatedField(many=True, queryset=QualityRule.objects.all(), required=False)
@@ -47,18 +54,26 @@ class ScenarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Scenario
         fields = [
-            "id", "title",
-            "process", "process_code", "process_name",
-            "status", "status_code", "status_name",
+            "id", "title", "description",
+            "process", "process_name",
+            "status", "status_name",
             "analyst", "created_by", "created_at",
             "rules", "operational_actions", "history",
         ]
-        read_only_fields = ["id", "created_at", "created_by"]
+        read_only_fields = ["id", "created_at", "created_by", "status"]
 
     def create(self, validated_data):
         request = self.context["request"]
         rules = validated_data.pop("rules", [])
         validated_data["created_by"] = request.user
+        
+        # Set default status
+        try:
+            default_status = ScenarioStatus.objects.get(code="REGISTRADO")
+            validated_data["status"] = default_status
+        except ScenarioStatus.DoesNotExist:
+            # Fallback or error if initial status configuration is missing
+            raise serializers.ValidationError("Estado inicial 'REGISTRADO' no configurado en el sistema.")
 
         scenario = super().create(validated_data)
 
@@ -72,6 +87,7 @@ class ScenarioSerializer(serializers.ModelSerializer):
             comment="Escenario creado",
         )
         return scenario
+
 
 class ScenarioTransitionRequestSerializer(serializers.Serializer):
     to_status = serializers.PrimaryKeyRelatedField(queryset=ScenarioStatus.objects.all())

@@ -53,7 +53,7 @@ INSTALLED_APPS = [
 CORS_ALLOWED_ORIGINS = ["http://localhost:5173","https://k8q7vpmg-5173.brs.devtunnels.ms"]
 #CORS_ALLOWED_ORIGINS = ["http://10.31.10.103:4201","http://10.31.10.103:5173","http://localhost:5173","http://10.31.10.86:5173" , "http://localhost:5173"]
 
-"""REST_FRAMEWORK = {
+REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
@@ -63,7 +63,7 @@ CORS_ALLOWED_ORIGINS = ["http://localhost:5173","https://k8q7vpmg-5173.brs.devtu
     "DEFAULT_RENDERER_CLASSES": (
         "rest_framework.renderers.JSONRenderer",
     ),
-}"""
+}
 
 
 
