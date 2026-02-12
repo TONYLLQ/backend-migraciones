@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-+qjl2t*c_@9mj2tqycfy32x%lq43^^_%*o^!v=79w)!$z@&vg3
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 AUTH_USER_MODEL = "accounts.User"
 
@@ -47,13 +47,14 @@ INSTALLED_APPS = [
     'accounts',
     'catalog',
     'scenarios',
+    'executions',
 ]
 
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:5173","https://k8q7vpmg-5173.brs.devtunnels.ms"]
+CORS_ALLOWED_ORIGINS = ["http://10.31.10.86:5173","http://localhost:5173"]
 #CORS_ALLOWED_ORIGINS = ["http://10.31.10.103:4201","http://10.31.10.103:5173","http://localhost:5173","http://10.31.10.86:5173" , "http://localhost:5173"]
 
-"""REST_FRAMEWORK = {
+REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
@@ -63,7 +64,14 @@ CORS_ALLOWED_ORIGINS = ["http://localhost:5173","https://k8q7vpmg-5173.brs.devtu
     "DEFAULT_RENDERER_CLASSES": (
         "rest_framework.renderers.JSONRenderer",
     ),
-}"""
+}
+
+# Celery
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
 
 
 
@@ -146,3 +154,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

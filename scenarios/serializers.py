@@ -3,6 +3,7 @@ from catalog.models import QualityRule, ScenarioStatus
 from .models import (
     OperationalActionStatus,
     Scenario,
+    ScenarioRule,
     ScenarioOperationalAction,
     ScenarioHistory,
 )
@@ -39,6 +40,9 @@ class ScenarioSerializer(serializers.ModelSerializer):
     process_name = serializers.CharField(source="process.name", read_only=True)
     status_code = serializers.CharField(source="status.code", read_only=True)
     status_name = serializers.CharField(source="status.name", read_only=True)
+    analyst_email = serializers.CharField(source="analyst.email", read_only=True)
+    analyst_name = serializers.SerializerMethodField()
+    rules_count = serializers.IntegerField(read_only=True)
 
     rules = serializers.PrimaryKeyRelatedField(many=True, queryset=QualityRule.objects.all(), required=False)
     operational_actions = ScenarioOperationalActionSerializer(many=True, read_only=True)
@@ -47,13 +51,19 @@ class ScenarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Scenario
         fields = [
-            "id", "title",
+            "id", "title", "description", "archive", "archive_uploaded_at", "archive_stage",
             "process", "process_code", "process_name",
             "status", "status_code", "status_name",
-            "analyst", "created_by", "created_at",
-            "rules", "operational_actions", "history",
+            "analyst", "analyst_email", "analyst_name", "created_by", "created_at",
+            "rules", "rules_count", "operational_actions", "history",
         ]
         read_only_fields = ["id", "created_at", "created_by"]
+
+    def get_analyst_name(self, obj):
+        if not obj.analyst:
+            return None
+        full = f"{obj.analyst.first_name} {obj.analyst.last_name}".strip()
+        return full or obj.analyst.email
 
     def create(self, validated_data):
         request = self.context["request"]
@@ -72,6 +82,18 @@ class ScenarioSerializer(serializers.ModelSerializer):
             comment="Escenario creado",
         )
         return scenario
+
+class ScenarioRuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ScenarioRule
+        fields = ["id", "scenario", "rule"]
+
+    def validate(self, attrs):
+        scenario = attrs.get("scenario")
+        rule = attrs.get("rule")
+        if scenario and rule and ScenarioRule.objects.filter(scenario=scenario, rule=rule).exists():
+            raise serializers.ValidationError({"detail": "La regla ya está asociada a este escenario."})
+        return attrs
 
 class ScenarioTransitionRequestSerializer(serializers.Serializer):
     to_status = serializers.PrimaryKeyRelatedField(queryset=ScenarioStatus.objects.all())

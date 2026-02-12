@@ -48,7 +48,7 @@ class RuleActionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RuleAction
-        fields = ["id", "action_type", "action_type_code", "action_type_name", "description"]
+        fields = ["id", "rule", "action_type", "action_type_code", "action_type_name", "description"]
         read_only_fields = ["id", "action_type_code", "action_type_name"]
 
 class QualityRuleSerializer(serializers.ModelSerializer):

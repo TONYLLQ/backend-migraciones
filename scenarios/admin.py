@@ -16,9 +16,9 @@ class ScenarioHistoryInline(admin.TabularInline):
 
 @admin.register(Scenario)
 class ScenarioAdmin(admin.ModelAdmin):
-    list_display = ("title", "process", "status", "analyst", "created_by", "created_at")
+    list_display = ("title", "process", "status", "analyst", "created_by", "created_at", "archive", "archive_uploaded_at")
     list_filter = ("process", "status")
-    search_fields = ("title",)
+    search_fields = ("title", "description")
     ordering = ("-created_at",)
     inlines = [ScenarioRuleInline, ScenarioOperationalActionInline, ScenarioHistoryInline]
 
