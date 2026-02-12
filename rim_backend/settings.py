@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +26,7 @@ SECRET_KEY = 'django-insecure-+qjl2t*c_@9mj2tqycfy32x%lq43^^_%*o^!v=79w)!$z@&vg3
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 AUTH_USER_MODEL = "accounts.User"
 
@@ -47,10 +48,11 @@ INSTALLED_APPS = [
     'accounts',
     'catalog',
     'scenarios',
+    'executions',
 ]
 
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:5173","https://k8q7vpmg-5173.brs.devtunnels.ms"]
+CORS_ALLOWED_ORIGINS = ["http://10.31.10.86:5173","http://localhost:5173","http://10.53.28.76:5173"]
 #CORS_ALLOWED_ORIGINS = ["http://10.31.10.103:4201","http://10.31.10.103:5173","http://localhost:5173","http://10.31.10.86:5173" , "http://localhost:5173"]
 
 REST_FRAMEWORK = {
@@ -110,6 +112,28 @@ DATABASES = {
     }
 }
 
+# External SQL Server (Windows Auth) for heavy-rule execution
+MSSQL_HOST = os.getenv("MSSQL_HOST", "DarkPython")  # o DarkPython\\SQLEXPRESS
+MSSQL_PORT = os.getenv("MSSQL_PORT", "")
+
+DATABASES["mssql"] = {
+    "ENGINE": "django_mssql_backend",
+    "NAME": os.getenv("MSSQL_DB", "AdventureWorks"),
+    "HOST": MSSQL_HOST,
+    "USER": os.getenv("MSSQL_USER", ""),
+    "PASSWORD": os.getenv("MSSQL_PASSWORD", ""),
+    "OPTIONS": {
+        "driver": os.getenv("MSSQL_DRIVER", "ODBC Driver 17 for SQL Server"),
+        "extra_params": os.getenv(
+            "MSSQL_EXTRA_PARAMS",
+            "TrustServerCertificate=yes;Trusted_Connection=yes;",
+        ),
+    },
+}
+
+if MSSQL_PORT:
+    DATABASES["mssql"]["PORT"] = MSSQL_PORT
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -146,3 +170,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Celery / Redis
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://127.0.0.1:6379/0")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://127.0.0.1:6379/1")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE

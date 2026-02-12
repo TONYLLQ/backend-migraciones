@@ -3,6 +3,7 @@ from catalog.models import QualityRule, ScenarioStatus, ScenarioProcess
 from .models import (
     OperationalActionStatus,
     Scenario,
+    ScenarioRule,
     ScenarioOperationalAction,
     ScenarioHistory,
 )
@@ -34,6 +35,15 @@ class ScenarioOperationalActionSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "created_at", "rule_name", "responsible_email", "status_code", "status_name"]
 
+class ScenarioRuleSerializer(serializers.ModelSerializer):
+    scenario_title = serializers.CharField(source="scenario.title", read_only=True)
+    rule_name = serializers.CharField(source="rule.name", read_only=True)
+
+    class Meta:
+        model = ScenarioRule
+        fields = ["id", "scenario", "scenario_title", "rule", "rule_name"]
+        read_only_fields = ["id", "scenario_title", "rule_name"]
+
 class ScenarioSerializer(serializers.ModelSerializer):
     process = serializers.SlugRelatedField(
         slug_field="code",
@@ -46,6 +56,9 @@ class ScenarioSerializer(serializers.ModelSerializer):
         read_only=True
     )
     status_name = serializers.CharField(source="status.name", read_only=True)
+    analyst_email = serializers.CharField(source="analyst.email", read_only=True)
+    analyst_name = serializers.SerializerMethodField()
+    rules_count = serializers.IntegerField(read_only=True)
 
     rules = serializers.PrimaryKeyRelatedField(many=True, queryset=QualityRule.objects.all(), required=False)
     operational_actions = ScenarioOperationalActionSerializer(many=True, read_only=True)
@@ -57,10 +70,18 @@ class ScenarioSerializer(serializers.ModelSerializer):
             "id", "title", "description",
             "process", "process_name",
             "status", "status_name",
-            "analyst", "created_by", "created_at",
+            "analyst", "analyst_email", "analyst_name",
+            "created_by", "created_at",
+            "rules_count",
             "rules", "operational_actions", "history",
         ]
         read_only_fields = ["id", "created_at", "created_by", "status"]
+
+    def get_analyst_name(self, obj):
+        if not obj.analyst:
+            return None
+        full = f"{obj.analyst.first_name} {obj.analyst.last_name}".strip()
+        return full or obj.analyst.email
 
     def create(self, validated_data):
         request = self.context["request"]

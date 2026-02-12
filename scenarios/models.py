@@ -18,9 +18,23 @@ class OperationalActionStatus(models.Model):
 class Scenario(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+
+    archive = models.FileField(upload_to="scenarios/" , blank=True , null=True)
+    archive_uploaded_at = models.DateTimeField(blank=True, null=True)
+    archive_stage = models.ForeignKey(
+        ScenarioStatus,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="archive_stage_scenarios",
+    )
+
 
     process = models.ForeignKey(ScenarioProcess, on_delete=models.PROTECT, related_name="scenarios")
     status = models.ForeignKey(ScenarioStatus, on_delete=models.PROTECT, related_name="scenarios")
+
+      
 
     analyst = models.ForeignKey(
         settings.AUTH_USER_MODEL,
