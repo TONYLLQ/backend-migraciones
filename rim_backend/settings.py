@@ -113,26 +113,19 @@ DATABASES = {
 }
 
 # External SQL Server (Windows Auth) for heavy-rule execution
-MSSQL_HOST = os.getenv("MSSQL_HOST", "DarkPython")  # o DarkPython\\SQLEXPRESS
-MSSQL_PORT = os.getenv("MSSQL_PORT", "")
 
 DATABASES["mssql"] = {
-    "ENGINE": "django_mssql_backend",
-    "NAME": os.getenv("MSSQL_DB", "AdventureWorks"),
-    "HOST": MSSQL_HOST,
-    "USER": os.getenv("MSSQL_USER", ""),
-    "PASSWORD": os.getenv("MSSQL_PASSWORD", ""),
+    "ENGINE": "mssql",
+    "NAME": "SIM",
+    "HOST": "172.27.0.242" ,
+    "USER": "udesa",
+    "PASSWORD": "DESARROLLO2006",
+    "PORT": "1433",
     "OPTIONS": {
-        "driver": os.getenv("MSSQL_DRIVER", "ODBC Driver 17 for SQL Server"),
-        "extra_params": os.getenv(
-            "MSSQL_EXTRA_PARAMS",
-            "TrustServerCertificate=yes;Trusted_Connection=yes;",
-        ),
+        "driver":"ODBC Driver 18 for SQL Server",
+        "extra_params": "TrustServerCertificate=yes;",
     },
 }
-
-if MSSQL_PORT:
-    DATABASES["mssql"]["PORT"] = MSSQL_PORT
 
 
 # Password validation
@@ -159,7 +152,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Lima'
 
 USE_I18N = True
 

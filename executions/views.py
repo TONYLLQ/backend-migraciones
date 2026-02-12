@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -45,7 +46,7 @@ class RuleExecutionViewSet(viewsets.ModelViewSet):
             requested_by=request.user,
         )
 
-        execute_rule.delay(str(execution.id))
+        transaction.on_commit(lambda: execute_rule.delay(str(execution.id)))
         serializer = self.get_serializer(execution)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
