@@ -23,3 +23,13 @@ def can_transition(user_role: str, scenario, to_status) -> None:
         pending = scenario.operational_actions.filter(status__code="PENDING").exists()
         if pending:
             raise ValidationError("No se puede pasar de etapa: existen acciones pendientes.")
+
+    # If moving from EVALUATION to PRIORITIZATION, require validated documents for that stage
+    from_code = (scenario.status.code or "").upper()
+    to_code = (to_status.code or "").upper()
+    if from_code in ("EVALUATION", "EVALUACION") and to_code in ("PRIORITIZATION", "PRIORIZACION"):
+        docs = scenario.documents.filter(status=scenario.status)
+        if not docs.exists():
+            raise ValidationError("No se puede pasar de etapa: no hay documentos en evaluación.")
+        if docs.filter(is_validated=False).exists():
+            raise ValidationError("No se puede pasar de etapa: existen documentos sin validar.")

@@ -49,10 +49,11 @@ INSTALLED_APPS = [
     'catalog',
     'scenarios',
     'executions',
+    'data_dictionary',
 ]
 
 
-CORS_ALLOWED_ORIGINS = ["http://10.31.10.86:5173","http://localhost:5173","http://10.53.28.76:5173"]
+CORS_ALLOWED_ORIGINS = ["http://10.31.10.86:5173","http://localhost:5173","http://10.53.28.76:5173" , "http://10.31.10.103:5173"]
 #CORS_ALLOWED_ORIGINS = ["http://10.31.10.103:4201","http://10.31.10.103:5173","http://localhost:5173","http://10.31.10.86:5173" , "http://localhost:5173"]
 
 REST_FRAMEWORK = {
@@ -164,6 +165,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Default primary key field type
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -175,3 +179,4 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
+

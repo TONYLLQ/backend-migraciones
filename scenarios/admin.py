@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Scenario, ScenarioRule, ScenarioOperationalAction, ScenarioHistory, OperationalActionStatus
+from .models import Scenario, ScenarioRule, ScenarioOperationalAction, ScenarioHistory, OperationalActionStatus, ScenarioDocument
 
 class ScenarioRuleInline(admin.TabularInline):
     model = ScenarioRule
@@ -41,3 +41,10 @@ class OperationalActionStatusAdmin(admin.ModelAdmin):
     list_filter = ("is_active",)
     search_fields = ("code", "name")
     ordering = ("order", "name")
+
+
+@admin.register(ScenarioDocument)
+class ScenarioDocumentAdmin(admin.ModelAdmin):
+    list_display = ("scenario", "status", "uploaded_by", "uploaded_at")
+    list_filter = ("status",)
+    search_fields = ("scenario__title",)

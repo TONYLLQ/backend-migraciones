@@ -103,3 +103,30 @@ class ScenarioHistory(models.Model):
 
     class Meta:
         ordering = ["-changed_at"]
+
+
+class ScenarioDocument(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    scenario = models.ForeignKey(Scenario, on_delete=models.CASCADE, related_name="documents")
+    status = models.ForeignKey(ScenarioStatus, on_delete=models.PROTECT, related_name="scenario_documents")
+    file = models.FileField(upload_to="scenarios/docs/")
+    is_validated = models.BooleanField(default=False)
+    validated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="validated_scenario_documents",
+    )
+    validated_at = models.DateTimeField(blank=True, null=True)
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="uploaded_scenario_documents",
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-uploaded_at"]

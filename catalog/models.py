@@ -77,6 +77,7 @@ class QualityRule(models.Model):
     dimension = models.ForeignKey(RuleDimension, on_delete=models.PROTECT, related_name="quality_rules")
     is_active = models.BooleanField(default=False)
     sql_query = models.TextField(blank=True, null=True)
+    sql_query_consistent = models.TextField(blank=True, null=True)
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

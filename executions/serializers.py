@@ -28,6 +28,7 @@ class RuleExecutionSerializer(serializers.ModelSerializer):
             "requested_by",
             "sql_snapshot",
             "rows_affected",
+            "execution_mode",
             "result_sample",
             "error_message",
             "started_at",

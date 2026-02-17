@@ -1,4 +1,6 @@
 from rest_framework import viewsets, permissions, status
+from rest_framework.exceptions import PermissionDenied
+from django.utils import timezone
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
@@ -8,7 +10,7 @@ from django.db.models import Q, Count
 from accounts.permissions import IsCoordinator
 
 from accounts.permissions import ReadOnlyForViewer
-from .models import Scenario, ScenarioRule, ScenarioOperationalAction, ScenarioHistory, OperationalActionStatus
+from .models import Scenario, ScenarioRule, ScenarioOperationalAction, ScenarioHistory, OperationalActionStatus, ScenarioDocument
 from catalog.models import ScenarioStatus
 from .serializers import (
     ScenarioSerializer,
@@ -16,6 +18,7 @@ from .serializers import (
     ScenarioOperationalActionSerializer,
     ScenarioTransitionRequestSerializer,
     OperationalActionStatusSerializer,
+    ScenarioDocumentSerializer,
 )
 from .transitions import can_transition
 
@@ -37,6 +40,16 @@ class ScenarioViewSet(viewsets.ModelViewSet):
         if user.role == "ANALYST":
             qs = qs.filter(Q(analyst=user) | Q(created_by=user))
         return qs
+
+    @action(detail=False, methods=["get"], url_path="status-distribution-assigned")
+    def status_distribution_assigned(self, request):
+        qs = self.get_queryset().filter(analyst__isnull=False)
+        data = (
+            qs.values("status__code", "status__name")
+            .annotate(count=Count("id"))
+            .order_by("status__name")
+        )
+        return Response(list(data))
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -143,3 +156,50 @@ class ScenarioRuleViewSet(viewsets.ModelViewSet):
     queryset = ScenarioRule.objects.all()
     serializer_class = ScenarioRuleSerializer
     permission_classes = [permissions.IsAuthenticated, ReadOnlyForViewer]
+
+
+class ScenarioDocumentViewSet(viewsets.ModelViewSet):
+    serializer_class = ScenarioDocumentSerializer
+    permission_classes = [permissions.IsAuthenticated, ReadOnlyForViewer]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_queryset(self):
+        qs = ScenarioDocument.objects.select_related("scenario", "status", "uploaded_by")
+        scenario_id = self.request.query_params.get("scenario")
+        if scenario_id:
+            qs = qs.filter(scenario_id=scenario_id)
+        user = self.request.user
+        if user.role == "ANALYST":
+            qs = qs.filter(scenario__analyst=user)
+        return qs
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if user.role == "VIEWER":
+            raise PermissionDenied("Rol no autorizado para subir documentos.")
+
+        scenario = serializer.validated_data.get("scenario")
+        if user.role == "ANALYST" and scenario and scenario.analyst_id != user.id:
+            raise PermissionDenied("Solo el analista asignado puede subir documentos.")
+
+        serializer.save(uploaded_by=user)
+
+    def perform_destroy(self, instance):
+        user = self.request.user
+        if user.role == "VIEWER":
+            raise PermissionDenied("Rol no autorizado para eliminar documentos.")
+        if user.role == "ANALYST" and instance.scenario.analyst_id != user.id:
+            raise PermissionDenied("Solo el analista asignado puede eliminar documentos.")
+        instance.delete()
+
+    @action(detail=True, methods=["post"], url_path="validate")
+    def validate_document(self, request, pk=None):
+        if request.user.role != "COORDINATOR":
+            raise PermissionDenied("Solo el coordinador puede validar documentos.")
+        doc = self.get_object()
+        doc.is_validated = True
+        doc.validated_by = request.user
+        doc.validated_at = timezone.now()
+        doc.save(update_fields=["is_validated", "validated_by", "validated_at"])
+        serializer = self.get_serializer(doc)
+        return Response(serializer.data)

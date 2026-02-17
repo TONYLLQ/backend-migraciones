@@ -6,6 +6,7 @@ from .models import (
     ScenarioRule,
     ScenarioOperationalAction,
     ScenarioHistory,
+    ScenarioDocument,
 )
 
 class ScenarioHistorySerializer(serializers.ModelSerializer):
@@ -35,6 +36,41 @@ class ScenarioOperationalActionSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "created_at", "rule_name", "responsible_email", "status_code", "status_name"]
 
+class ScenarioDocumentSerializer(serializers.ModelSerializer):
+    status_code = serializers.CharField(source="status.code", read_only=True)
+    status_name = serializers.CharField(source="status.name", read_only=True)
+    uploaded_by_email = serializers.CharField(source="uploaded_by.email", read_only=True)
+    validated_by_email = serializers.CharField(source="validated_by.email", read_only=True)
+
+    class Meta:
+        model = ScenarioDocument
+        fields = [
+            "id",
+            "scenario",
+            "status",
+            "status_code",
+            "status_name",
+            "file",
+            "uploaded_by",
+            "uploaded_by_email",
+            "uploaded_at",
+            "is_validated",
+            "validated_by",
+            "validated_by_email",
+            "validated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "uploaded_by",
+            "uploaded_by_email",
+            "uploaded_at",
+            "status_code",
+            "status_name",
+            "validated_by",
+            "validated_by_email",
+            "validated_at",
+        ]
+
 class ScenarioRuleSerializer(serializers.ModelSerializer):
     scenario_title = serializers.CharField(source="scenario.title", read_only=True)
     rule_name = serializers.CharField(source="rule.name", read_only=True)
@@ -63,6 +99,7 @@ class ScenarioSerializer(serializers.ModelSerializer):
     rules = serializers.PrimaryKeyRelatedField(many=True, queryset=QualityRule.objects.all(), required=False)
     operational_actions = ScenarioOperationalActionSerializer(many=True, read_only=True)
     history = ScenarioHistorySerializer(many=True, read_only=True)
+    documents = ScenarioDocumentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Scenario
@@ -72,10 +109,11 @@ class ScenarioSerializer(serializers.ModelSerializer):
             "status", "status_name",
             "analyst", "analyst_email", "analyst_name",
             "created_by", "created_at",
+            "archive", "archive_uploaded_at", "archive_stage",
             "rules_count",
-            "rules", "operational_actions", "history",
+            "rules", "operational_actions", "history", "documents",
         ]
-        read_only_fields = ["id", "created_at", "created_by", "status"]
+        read_only_fields = ["id", "created_at", "created_by", "status", "archive_uploaded_at", "archive_stage"]
 
     def get_analyst_name(self, obj):
         if not obj.analyst:
@@ -90,11 +128,11 @@ class ScenarioSerializer(serializers.ModelSerializer):
         
         # Set default status
         try:
-            default_status = ScenarioStatus.objects.get(code="REGISTRADO")
+            default_status = ScenarioStatus.objects.get(code="REGISTERED")
             validated_data["status"] = default_status
         except ScenarioStatus.DoesNotExist:
             # Fallback or error if initial status configuration is missing
-            raise serializers.ValidationError("Estado inicial 'REGISTRADO' no configurado en el sistema.")
+            raise serializers.ValidationError("Estado inicial 'REGISTERED' no configurado en el sistema.")
 
         scenario = super().create(validated_data)
 

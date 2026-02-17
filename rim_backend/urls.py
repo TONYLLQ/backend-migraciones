@@ -26,9 +26,11 @@ urlpatterns = [
     path('api/catalog/', include('catalog.urls')),
     path('api/scenarios/', include('scenarios.urls')),
     path('api/executions/', include('executions.urls')),
+    path('api/data-dictionary/', include('data_dictionary.urls')),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

@@ -35,6 +35,7 @@ class RuleExecution(models.Model):
 
     sql_snapshot = models.TextField(blank=True, null=True)
     rows_affected = models.IntegerField(blank=True, null=True)
+    execution_mode = models.CharField(max_length=20, default="inconsistent")
     result_sample = models.JSONField(blank=True, null=True)
     error_message = models.TextField(blank=True, null=True)
 

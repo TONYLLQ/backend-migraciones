@@ -61,7 +61,7 @@ class QualityRuleSerializer(serializers.ModelSerializer):
         model = QualityRule
         fields = [
             "id", "name", "dimension", "dimension_code", "dimension_name",
-            "is_active", "sql_query",
+            "is_active", "sql_query", "sql_query_consistent",
             "created_by", "created_by_email", "created_at", "actions"
         ]
         read_only_fields = ["id", "created_at", "created_by_email", "dimension_code", "dimension_name"]
